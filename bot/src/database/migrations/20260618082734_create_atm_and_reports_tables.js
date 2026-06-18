@@ -21,6 +21,7 @@ exports.up = function(knex) {
 
       // Link the report's atm_number to our atms table
       table.foreign('atm_number').references('atm_number').inTable('atms').onDelete('CASCADE');
+      table.string('card_number', 20).nullable()
     });
 };
 

@@ -1,5 +1,4 @@
-const { Telegraf, Scenes } = require('telegraf');
-const { session } = require('@telegraf/session');
+const { Telegraf, Scenes, session } = require('telegraf'); // Native session integration
 const supportWizard = require('./scenes/supportWizard');
 require('dotenv').config();
 
@@ -15,13 +14,13 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const stage = new Scenes.Stage([supportWizard]);
 
 // 3. Register Global Middleware Components
-bot.use(session());          // Remembers the user's conversational steps
+bot.use(session());          // Fixed: Uses clean, native memory sessions
 bot.use(stage.middleware()); // Mounts the scene lifecycle system
 
 // 4. Global Commands
 bot.start((ctx) => ctx.scene.enter('support_wizard'));
 
-// Fallback listener for users who message the bot outside an active scene context
+// Fallback listener
 bot.on('message', (ctx) => {
   ctx.reply("Please type /start to launch the Alif Bank Support system.\n\nIltimos, qo'llab-quvvatlash tizimini ishga tushirish uchun /start buyrug'ini bosing.");
 });
