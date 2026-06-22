@@ -22,7 +22,11 @@ bot.start((ctx) => ctx.scene.enter('support_wizard'));
 
 // Fallback listener
 bot.on('message', (ctx) => {
-  ctx.reply("Please type /start to launch the Alif Bank Support system.\n\nIltimos, qo'llab-quvvatlash tizimini ishga tushirish uchun /start buyrug'ini bosing.");
+  ctx.reply(
+  "Please type /start to launch the Alif Bank Support system.\n\n" +
+  "Iltimos, qo'llab-quvvatlash tizimini ishga tushirish uchun /start buyrug'ini bosing.\n\n" +
+  "Пожалуйста, введите /start, чтобы запустить систему поддержки Alif Bank."
+);
 });
 
 module.exports = bot;
