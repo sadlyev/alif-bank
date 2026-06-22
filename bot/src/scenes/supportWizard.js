@@ -77,7 +77,7 @@ const supportWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Step 3: ATM validation
+  // Step 3: Terminal validation
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -115,7 +115,7 @@ const supportWizard = new Scenes.WizardScene(
 
       return ctx.wizard.next();
     } catch (err) {
-      console.error('ATM validation error:', err);
+      console.error('Terminal validation error:', err);
       return ctx.reply('Database error. Please try again.');
     }
   },
@@ -161,7 +161,7 @@ const supportWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Step 6: Problem description + save
+  // Step 6: Problem description + save + notify channel
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -179,24 +179,26 @@ const supportWizard = new Scenes.WizardScene(
         telegram_id: ctx.from.id,
         language: data.language,
         atm_number: data.atm_number,
-        client_number: data.phone_number, // OK (you are storing phone here)
+        client_number: data.phone_number,
         card_number: data.card_number,
         problem_description: data.problem_description
       });
 
-      const adminId = process.env.ADMIN_TELEGRAM_ID;
+      // Target channel configured from environment variables
+      const channelId = process.env.CHANNEL_TELEGRAM_ID;
 
-      if (adminId) {
-        const adminMessage =
-          `🚨 New ATM Problem Report!\n\n` +
+      if (channelId) {
+        // Updated formatting to match terminal branding
+        const channelMessage =
+          `🚨 New Terminal Problem Report!\n\n` +
           `👤 User: ${ctx.from.first_name || 'User'} (ID: ${ctx.from.id})\n` +
           `🌐 Language: ${data.language.toUpperCase()}\n` +
-          `🏧 ATM Number: ${data.atm_number}\n` +
-          `📞 Phone: +${data.phone_number}\n` +
+          `📟 Terminal Number: ${data.atm_number}\n` +
+          `📞 Phone: +${data.phone_number.replace(/^\+/, '')}\n` +
           `💳 Card: ${data.card_number}\n` +
           `📝 Issue: ${data.problem_description}`;
 
-        await ctx.telegram.sendMessage(adminId, adminMessage);
+        await ctx.telegram.sendMessage(channelId, channelMessage);
       }
 
       await ctx.reply(strings[lang].success);
