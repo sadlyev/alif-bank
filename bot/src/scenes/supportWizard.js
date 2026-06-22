@@ -154,14 +154,55 @@ const supportWizard = new Scenes.WizardScene(
     }
 
     ctx.wizard.state.formData.card_number =
-      cardNumber.replace(/\D/g, '');
+    cardNumber.replace(/\D/g, '');
 
-    await ctx.reply(strings[lang].ask_problem);
+    await ctx.reply(strings[lang].ask_amount);
 
     return ctx.wizard.next();
   },
 
-  // Step 6: Problem description + save + notify channel
+  // Step 6: Amount
+async (ctx) => {
+const lang = ctx.wizard.state.formData.language;
+
+
+if (!ctx.message || !ctx.message.text) {
+  return ctx.reply(strings[lang].ask_amount);
+}
+
+const amount = ctx.message.text.trim().replace(/\s/g, '');
+
+if (!/^\d+$/.test(amount)) {
+  return ctx.reply(strings[lang].invalid_amount);
+}
+
+ctx.wizard.state.formData.amount = amount;
+
+await ctx.reply(strings[lang].ask_time);
+
+return ctx.wizard.next();
+
+},
+
+// Step 7: Incident time
+async (ctx) => {
+const lang = ctx.wizard.state.formData.language;
+
+if (!ctx.message || !ctx.message.text) {
+  return ctx.reply(strings[lang].ask_time);
+}
+
+ctx.wizard.state.formData.incident_time =
+  ctx.message.text.trim();
+
+await ctx.reply(strings[lang].ask_problem);
+
+return ctx.wizard.next();
+
+},
+
+
+  // Step 8: Problem description + save + notify channel
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -181,6 +222,8 @@ const supportWizard = new Scenes.WizardScene(
         atm_number: data.atm_number,
         client_number: data.phone_number,
         card_number: data.card_number,
+        amount: data.amount,
+        incident_time: data.incident_time,
         problem_description: data.problem_description
       });
 
@@ -196,6 +239,8 @@ const supportWizard = new Scenes.WizardScene(
           `📟 Terminal Number: ${data.atm_number}\n` +
           `📞 Phone: +${data.phone_number.replace(/^\+/, '')}\n` +
           `💳 Card: ${data.card_number}\n` +
+          `💰 Amount: ${data.amount} UZS\n` +
+          `🕒 Incident Time: ${data.incident_time}\n` +
           `📝 Issue: ${data.problem_description}`;
 
         await ctx.telegram.sendMessage(channelId, channelMessage);
