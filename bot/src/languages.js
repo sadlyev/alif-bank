@@ -11,7 +11,7 @@ const strings = {
     invalid_card: "❌ Karta raqami noto'g'ri. Iltimos, 16 xonali raqamni boshqadan kiriting:",
     ask_amount: "Iltimos, bankomatga kiritilgan summani kiriting (so'm):",
     invalid_amount: "❌ Noto'g'ri summa. Iltimos, faqat raqam kiriting:",
-    ask_time: "Iltimos, hodisa sodir bo'lgan vaqtni kiriting (masalan: 14:30 yoki 22.06.2026 14:30):"
+    ask_time: "Iltimos, hodisa sodir bo'lgan sana va vaqtni kiriting (masalan: 22-iyul 14:30):",
   },
   ru: {
     welcome: "Ассалому алейкум! Это бот поддержки Алиф Банка. Выберите язык, чтобы продолжить:",
@@ -25,7 +25,7 @@ const strings = {
     invalid_card: "❌ Неверный номер карты. Пожалуйста, введите правильный 16-значный номер карты:",
     ask_amount: "Пожалуйста, введите сумму, внесенную в банкомат (сум):",
     invalid_amount: "❌ Неверная сумма. Пожалуйста, введите только число:",
-    ask_time: "Пожалуйста, укажите время происшествия (например: 14:30 или 22.06.2026 14:30):",
+    ask_time: "Пожалуйста, укажите дату и время происшествия (например: 22 июля 14:30):",
   },
   en: {
     welcome: "Assalomu aleykum! This is the Alif Bank support bot. Choose a language to continue:",
@@ -39,7 +39,7 @@ const strings = {
     invalid_card:"❌ Invalid card number. Please enter a valid 16-digit card number:",
     ask_amount: "Please enter the amount inserted into the ATM (UZS):",
     invalid_amount: "❌ Invalid amount. Please enter numbers only:",
-    ask_time: "Please enter when the incident happened (e.g. 14:30 or 22.06.2026 14:30):",
+    ask_time: "Please enter the date and time of the incident (e.g. July 22, 14:30):",
   }
 };
 
