@@ -8,7 +8,10 @@ const strings = {
     success: "Rahmat! Sizning arizangiz muvaffaqiyatli qabul qilindi. Tez orada siz bilan bog'lanamiz.",
     invalid_atm: "❌ Bunday raqamli bankomat topilmadi. Iltimos, raqamni tekshirib qaytadan kiriting:",
     ask_card: "Rahmat. Endi, iltimos, bank karta raqamingizni kiriting:",
-    invalid_card: "❌ Karta raqami noto'g'ri. Iltimos, 16 xonali raqamni boshqadan kiriting:"
+    invalid_card: "❌ Karta raqami noto'g'ri. Iltimos, 16 xonali raqamni boshqadan kiriting:",
+    ask_amount: "Iltimos, bankomatga kiritilgan summani kiriting (so'm):",
+    invalid_amount: "❌ Noto'g'ri summa. Iltimos, faqat raqam kiriting:",
+    ask_time: "Iltimos, hodisa sodir bo'lgan vaqtni kiriting (masalan: 14:30 yoki 22.06.2026 14:30):"
   },
   ru: {
     welcome: "Добро пожаловать! Это бот поддержки Алиф Банка. Пожалуйста, выберите язык, чтобы продолжить:",
@@ -19,7 +22,10 @@ const strings = {
     success: "Спасибо! Ваш отчет успешно отправлен. Мы свяжемся с вами в ближайшее время.",
     invalid_atm: "❌ Неверный номер банкомата. Пожалуйста, проверьте номер и введите его снова:",
     ask_card: "Спасибо. Теперь, пожалуйста, введите номер вашей банковской карты:",
-    invalid_card: "❌ Неверный номер карты. Пожалуйста, введите правильный 16-значный номер карты:"
+    invalid_card: "❌ Неверный номер карты. Пожалуйста, введите правильный 16-значный номер карты:",
+    ask_amount: "Пожалуйста, введите сумму, внесенную в банкомат (сум):",
+    invalid_amount: "❌ Неверная сумма. Пожалуйста, введите только число:",
+    ask_time: "Пожалуйста, укажите время происшествия (например: 14:30 или 22.06.2026 14:30):",
   },
   en: {
     welcome: "Welcome! This is the Alif Bank Support Bot. Please select a language to continue:",
@@ -30,7 +36,10 @@ const strings = {
     success: "Thank you! Your report has been submitted successfully. We will contact you soon.",
     invalid_atm: "❌ Invalid ATM number. Please check the number and type it again:",
     ask_card: "Thank you. Now, please enter your bank card number:",
-    invalid_card:"❌ Invalid card number. Please enter a valid 16-digit card number:"
+    invalid_card:"❌ Invalid card number. Please enter a valid 16-digit card number:",
+    ask_amount: "Please enter the amount inserted into the ATM (UZS):",
+    invalid_amount: "❌ Invalid amount. Please enter numbers only:",
+    ask_time: "Please enter when the incident happened (e.g. 14:30 or 22.06.2026 14:30):",
   }
 };
 
