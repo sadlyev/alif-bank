@@ -4,11 +4,14 @@ const strings = {
     ask_atm: "Iltimos, terminal raqamini kiriting:",
     ask_client: "Rahmat. Endi, iltimos, mijoz raqamingizni (ID) kiriting:",
     ask_phone: "Iltimos, pastdagi tugmani bosib telefon raqamingizni ulashing:",
-    ask_problem: "Iltimos, terminalda yuzaga kelgan muammoni tasvirlab bering:",
-    success: "Raxmat! Sizning arizangiz muvaffaqiyatli qabul qilindi. Tez orada siz bilan bog'lanamiz.",
-    invalid_atm: "❌ Bunday raqamli terminal topilmadi. Iltimos, raqamni tekshirib qaytadan kiriting:",
-    ask_card: "Raxmat. Endi, iltimos, bank karta raqamingizni kiriting:",
-    invalid_card: "❌ Karta raqami noto'g'ri. Iltimos, 16 xonali raqamni boshqadan kiriting:"
+    ask_problem: "Iltimos, bankomatda yuzaga kelgan muammoni tasvirlab bering:",
+    success: "Rahmat! Sizning arizangiz muvaffaqiyatli qabul qilindi. Tez orada siz bilan bog'lanamiz.",
+    invalid_atm: "❌ Bunday raqamli bankomat topilmadi. Iltimos, raqamni tekshirib qaytadan kiriting:",
+    ask_card: "Rahmat. Endi, iltimos, bank karta raqamingizni kiriting:",
+    invalid_card: "❌ Karta raqami noto'g'ri. Iltimos, 16 xonali raqamni boshqadan kiriting:",
+    ask_amount: "Iltimos, bankomatga kiritilgan summani kiriting (so'm):",
+    invalid_amount: "❌ Noto'g'ri summa. Iltimos, faqat raqam kiriting:",
+    ask_time: "Iltimos, hodisa sodir bo'lgan vaqtni kiriting (masalan: 14:30 yoki 22.06.2026 14:30):"
   },
   ru: {
     welcome: "Ассалому алейкум! Это бот поддержки Алиф Банка. Выберите язык, чтобы продолжить:",
@@ -19,7 +22,10 @@ const strings = {
     success: "Спасибо! Ваша заявка успешно принята. Мы свяжемся с вами в ближайшее время.",
     invalid_atm: "❌ Терминал с таким номером не найден. Пожалуйста, проверьте номер и введите снова:",
     ask_card: "Спасибо. Теперь, пожалуйста, введите номер вашей банковской карты:",
-    invalid_card: "❌ Номер карты неверный. Пожалуйста, введите 16-значный номер заново:"
+    invalid_card: "❌ Неверный номер карты. Пожалуйста, введите правильный 16-значный номер карты:",
+    ask_amount: "Пожалуйста, введите сумму, внесенную в банкомат (сум):",
+    invalid_amount: "❌ Неверная сумма. Пожалуйста, введите только число:",
+    ask_time: "Пожалуйста, укажите время происшествия (например: 14:30 или 22.06.2026 14:30):",
   },
   en: {
     welcome: "Assalomu aleykum! This is the Alif Bank support bot. Choose a language to continue:",
@@ -30,7 +36,10 @@ const strings = {
     success: "Thank you! Your application has been successfully accepted. We will contact you soon.",
     invalid_atm: "❌ A terminal with this number was not found. Please check the number and re-enter:",
     ask_card: "Thank you. Now, please enter your bank card number:",
-    invalid_card: "❌ Card number is incorrect. Please enter the 16-digit number again:"
+    invalid_card:"❌ Invalid card number. Please enter a valid 16-digit card number:",
+    ask_amount: "Please enter the amount inserted into the ATM (UZS):",
+    invalid_amount: "❌ Invalid amount. Please enter numbers only:",
+    ask_time: "Please enter when the incident happened (e.g. 14:30 or 22.06.2026 14:30):",
   }
 };
 
