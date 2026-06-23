@@ -195,4 +195,8 @@ exports.seed = async function(knex) {
     { atm_number: '11198', name: 'Minor metrosi' },
     { atm_number: '11261', name: 'Abdulla Qodiriy metrosi' },
     { atm_number: '11135', name: "Mirzo Ulug'bek 1-1" },
-    { atm_number: '10127', name: "Toshkent, Shayhontoxur, Halqlar do'stligi" }]};
+    { atm_number: '10127', name: "Toshkent, Shayhontoxur" },
+    { atm_number: '10820', name: "Halqlar do'stligi"}
+  ]
+
+};

@@ -97,6 +97,7 @@ const supportWizard = new Scenes.WizardScene(
       }
 
       ctx.wizard.state.formData.atm_number = typedAtm;
+      ctx.wizard.state.formData.atm_name = validAtm.name;
 
       const contactLabels = {
         uz: '📞 Telefon raqamni yuborish',
@@ -233,15 +234,16 @@ return ctx.wizard.next();
       if (channelId) {
         // Updated formatting to match terminal branding
         const channelMessage =
-          `🚨 New Terminal Problem Report!\n\n` +
-          `👤 User: ${ctx.from.first_name || 'User'} (ID: ${ctx.from.id})\n` +
-          `🌐 Language: ${data.language.toUpperCase()}\n` +
-          `📟 Terminal Number: ${data.atm_number}\n` +
-          `📞 Phone: +${data.phone_number.replace(/^\+/, '')}\n` +
-          `💳 Card: ${data.card_number}\n` +
-          `💰 Amount: ${data.amount} UZS\n` +
-          `🕒 Incident Time: ${data.incident_time}\n` +
-          `📝 Issue: ${data.problem_description}`;
+        `🚨 New Terminal Problem Report!\n\n` +
+        `👤 User: ${ctx.from.first_name || 'User'} (ID: ${ctx.from.id})\n` +
+        `🌐 Language: ${data.language.toUpperCase()}\n` +
+        `📟 Terminal Number: ${data.atm_number}\n` +
+        `🏢 ATM Name: ${data.atm_name}\n` +
+        `📞 Phone: +${data.phone_number.replace(/^\+/, '')}\n` +
+        `💳 Card: ${data.card_number}\n` +
+        `💰 Amount: ${data.amount} UZS\n` +
+        `🕒 Incident Time: ${data.incident_time}\n` +
+        `📝 Issue: ${data.problem_description}`;
 
         await ctx.telegram.sendMessage(channelId, channelMessage);
       }
