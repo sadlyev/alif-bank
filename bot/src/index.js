@@ -201,14 +201,25 @@ const atmList = [
   { atm_number: '10127', name: "Toshkent, Shayhontoxur" },
   { atm_number: '10820', name: "Halqlar do'stligi"}
 ];
+// 1. THIS RUNS ONLY ONCE WHEN THE SERVER STARTS
 app.listen(PORT, async () => {
   console.log(`🚀 Express server listening on local port: ${PORT}`);
-  
   try {
     await bot.telegram.deleteWebhook({ drop_pending_updates: true });
-    console.log('🧹 Old webhooks cleared successfully.');
+    bot.launch();
+    console.log('🤖 Telegram Bot is online using Long Polling!');
+  } catch (error) {
+    console.error('❌ Failed to launch bot:', error);
+  }
+});
 
-    // Local data structure parser block to clear duplicates safely
+// 2. CREATE A DEDICATED ROUTE FOR YOUR CRON JOB
+app.get('/sync-cron', async (req, res) => {
+  try {
+    // Send a 200 OK immediately so cron-job.org finishes successfully
+    res.status(200).send('Sync started'); 
+
+    // Run the heavy database work asynchronously in the background
     const cleanList = [];
     const seenIds = new Set();
     for (const item of atmList) {
@@ -218,16 +229,16 @@ app.listen(PORT, async () => {
       }
     }
 
-    // Direct insertion using active execution connection
     await db('atms').insert(cleanList).onConflict('atm_number').merge();
-    console.log(`📦 Internal Sync complete: ${cleanList.length} ATMs are live in the database.`);
+    console.log(`📦 Internal Sync complete: ${cleanList.length} ATMs updated.`);
 
-    bot.launch();
-    console.log('🤖 Telegram Bot is online locally using Long Polling!');
-  } catch (error) {
-    console.error('❌ Failed to launch runtime instance loop:', error);
+  } catch (err) {
+    console.error('❌ Sync failed:', err);
+    // Don't send the error to the cron service if it's too large
+    if (!res.headersSent) res.status(500).send('Error'); 
   }
 });
+
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
