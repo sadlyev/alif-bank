@@ -199,4 +199,8 @@ exports.seed = async function(knex) {
     { atm_number: '10820', name: "Halqlar do'stligi"}
   ]
 
+  await knex('atms').insert(atmList);
+  
+  console.log(`✅ Successfully injected ${atmList.length} ATMs into PostgreSQL.`)
+
 };
