@@ -2,31 +2,34 @@ const { Scenes, Markup } = require('telegraf');
 const db = require('../db');
 const strings = require('../languages');
 
-// Luhn algorithm validation
-function isValidCardNumber(cardNumber) {
-  const cleaned = cardNumber.replace(/\D/g, '');
-
-  // Must be exactly 16 digits
-  if (!/^\d{16}$/.test(cleaned)) {
-    return false;
+function getText(ctx) {
+  if (!ctx.message || !ctx.message.text) {
+    return null;
   }
 
-  let sum = 0;
-  let shouldDouble = false;
+  return ctx.message.text.trim();
+}
 
-  for (let i = cleaned.length - 1; i >= 0; i--) {
-    let digit = parseInt(cleaned[i], 10);
+function onlyDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
 
-    if (shouldDouble) {
-      digit *= 2;
-      if (digit > 9) digit -= 9;
-    }
-
-    sum += digit;
-    shouldDouble = !shouldDouble;
+function getString(lang, key, fallback) {
+  if (strings[lang] && strings[lang][key]) {
+    return strings[lang][key];
   }
 
-  return sum % 10 === 0;
+  return fallback;
+}
+
+function isCancelCommand(ctx) {
+  const text = getText(ctx);
+  return text && text.toLowerCase() === '/cancel';
+}
+
+function isStartCommand(ctx) {
+  const text = getText(ctx);
+  return text && text.toLowerCase() === '/start';
 }
 
 const supportWizard = new Scenes.WizardScene(
@@ -50,22 +53,27 @@ const supportWizard = new Scenes.WizardScene(
 
   // Step 2: Language handler
   async (ctx) => {
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
+    }
+
     if (!ctx.callbackQuery) {
       return ctx.reply(
         'Please choose a language / Iltimos tilni tanlang / Пожалуйста, выберите язык.'
       );
     }
 
-    const selection = ctx.callbackQuery.data;
     const langMap = {
       lang_uz: 'uz',
       lang_ru: 'ru',
       lang_en: 'en'
     };
 
-    const selectedLang = langMap[selection];
+    const selectedLang = langMap[ctx.callbackQuery.data];
 
     if (!selectedLang) {
+      await ctx.answerCbQuery();
       return ctx.reply('Invalid language selection.');
     }
 
@@ -77,15 +85,25 @@ const supportWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Step 3: Terminal validation
+  // Step 3: Terminal ID validation
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
-    if (!ctx.message || !ctx.message.text) {
-      return ctx.reply(strings[lang].ask_atm);
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
     }
 
-    const typedAtm = ctx.message.text.trim();
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
+    }
+
+    const typedAtm = getText(ctx);
+
+    if (!typedAtm) {
+      return ctx.reply(strings[lang].ask_atm);
+    }
 
     try {
       const validAtm = await db('atms')
@@ -99,20 +117,7 @@ const supportWizard = new Scenes.WizardScene(
       ctx.wizard.state.formData.atm_number = typedAtm;
       ctx.wizard.state.formData.atm_name = validAtm.name;
 
-      const contactLabels = {
-        uz: '📞 Telefon raqamni yuborish',
-        ru: '📞 Отправить номер телефона',
-        en: '📞 Share Phone Number'
-      };
-
-      await ctx.reply(
-        strings[lang].ask_phone,
-        Markup.keyboard([
-          [Markup.button.contactRequest(contactLabels[lang])]
-        ])
-          .resize()
-          .oneTime()
-      );
+      await ctx.reply(strings[lang].ask_problem);
 
       return ctx.wizard.next();
     } catch (err) {
@@ -121,98 +126,155 @@ const supportWizard = new Scenes.WizardScene(
     }
   },
 
-  // Step 4: Phone number
+  // Step 4: Problem description
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
-    if (!ctx.message || !ctx.message.contact) {
-      return ctx.reply(strings[lang].ask_phone);
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
     }
 
-    ctx.wizard.state.formData.phone_number =
-      ctx.message.contact.phone_number;
-
-    await ctx.reply(
-      strings[lang].ask_card,
-      Markup.removeKeyboard()
-    );
-
-    return ctx.wizard.next();
-  },
-
-  // Step 5: Card validation
-  async (ctx) => {
-    const lang = ctx.wizard.state.formData.language;
-
-    if (!ctx.message || !ctx.message.text) {
-      return ctx.reply(strings[lang].ask_card);
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
     }
 
-    const cardNumber = ctx.message.text.trim();
+    const problem = getText(ctx);
 
-    if (!isValidCardNumber(cardNumber)) {
-      return ctx.reply(strings[lang].invalid_card);
+    if (!problem) {
+      return ctx.reply(strings[lang].ask_problem);
     }
 
-    ctx.wizard.state.formData.card_number =
-    cardNumber.replace(/\D/g, '');
+    ctx.wizard.state.formData.problem_description = problem;
 
     await ctx.reply(strings[lang].ask_amount);
 
     return ctx.wizard.next();
   },
 
-  // Step 6: Amount
-async (ctx) => {
-const lang = ctx.wizard.state.formData.language;
-
-
-if (!ctx.message || !ctx.message.text) {
-  return ctx.reply(strings[lang].ask_amount);
-}
-
-const amount = ctx.message.text.trim().replace(/\s/g, '');
-
-if (!/^\d+$/.test(amount)) {
-  return ctx.reply(strings[lang].invalid_amount);
-}
-
-ctx.wizard.state.formData.amount = amount;
-
-await ctx.reply(strings[lang].ask_time);
-
-return ctx.wizard.next();
-
-},
-
-// Step 7: Incident time
-async (ctx) => {
-const lang = ctx.wizard.state.formData.language;
-
-if (!ctx.message || !ctx.message.text) {
-  return ctx.reply(strings[lang].ask_time);
-}
-
-ctx.wizard.state.formData.incident_time =
-  ctx.message.text.trim();
-
-await ctx.reply(strings[lang].ask_problem);
-
-return ctx.wizard.next();
-
-},
-
-
-  // Step 8: Problem description + save + notify channel
+  // Step 5: Amount entered to terminal
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
-    if (!ctx.message || !ctx.message.text) {
-      return ctx.reply(strings[lang].ask_problem);
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
     }
 
-    ctx.wizard.state.formData.problem_description =
-      ctx.message.text.trim();
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
+    }
+
+    const amountRaw = getText(ctx);
+
+    if (!amountRaw) {
+      return ctx.reply(strings[lang].ask_amount);
+    }
+
+    const amount = onlyDigits(amountRaw);
+
+    if (!amount || !/^\d+$/.test(amount)) {
+      return ctx.reply(strings[lang].invalid_amount);
+    }
+
+    ctx.wizard.state.formData.amount = amount;
+
+    await ctx.reply(strings[lang].ask_card);
+
+    return ctx.wizard.next();
+  },
+
+  // Step 6: Full card number
+  async (ctx) => {
+    const lang = ctx.wizard.state.formData.language;
+
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
+    }
+
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
+    }
+
+    const cardDigits = onlyDigits(getText(ctx));
+
+    if (!/^\d{16}$/.test(cardDigits)) {
+      return ctx.reply(strings[lang].invalid_card);
+    }
+
+    const first4 = cardDigits.slice(0, 4);
+    const last4 = cardDigits.slice(-4);
+
+    ctx.wizard.state.formData.card_first4 = first4;
+    ctx.wizard.state.formData.card_last4 = last4;
+    ctx.wizard.state.formData.card_number = `${first4}******${last4}`;
+
+    const contactLabels = {
+      uz: '📞 Telefon raqamni yuborish',
+      ru: '📞 Отправить номер телефона',
+      en: '📞 Share Phone Number'
+    };
+
+    await ctx.reply(
+      strings[lang].ask_phone,
+      Markup.keyboard([
+        [Markup.button.contactRequest(contactLabels[lang])]
+      ])
+        .resize()
+        .oneTime()
+    );
+
+    return ctx.wizard.next();
+  },
+
+  // Step 7: Phone number + save + notify channel
+  async (ctx) => {
+    const lang = ctx.wizard.state.formData.language;
+
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
+    }
+
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
+    }
+
+    let phoneNumber = null;
+
+    if (ctx.message && ctx.message.contact && ctx.message.contact.phone_number) {
+      phoneNumber = ctx.message.contact.phone_number;
+    } else if (ctx.message && ctx.message.text) {
+      phoneNumber = ctx.message.text.trim();
+    }
+
+    if (!phoneNumber) {
+      return ctx.reply(strings[lang].ask_phone);
+    }
+
+    phoneNumber = phoneNumber.replace(/\s/g, '');
+
+    // Basic validation: must look like a phone number (digits, optional leading +)
+    if (!/^\+?\d{7,15}$/.test(phoneNumber)) {
+      return ctx.reply(
+        getString(
+          lang,
+          'invalid_phone',
+          lang === 'ru'
+            ? 'Введите корректный номер телефона или отправьте контакт.'
+            : lang === 'uz'
+              ? "To'g'ri telefon raqamini kiriting yoki kontaktni yuboring."
+              : 'Please enter a valid phone number or share your contact.'
+        )
+      );
+    }
+
+    ctx.wizard.state.formData.phone_number = phoneNumber;
 
     const data = ctx.wizard.state.formData;
 
@@ -224,35 +286,39 @@ return ctx.wizard.next();
         client_number: data.phone_number,
         card_number: data.card_number,
         amount: data.amount,
-        incident_time: data.incident_time,
-        problem_description: data.problem_description
+        problem_description: data.problem_description,
+        created_at: new Date()
+
+        // If your DB requires incident_time, uncomment this:
+        // incident_time: null
       });
 
-      // Target channel configured from environment variables
       const channelId = process.env.CHANNEL_TELEGRAM_ID;
 
       if (channelId) {
-        // Updated formatting to match terminal branding
+        const formattedPhone = `+${data.phone_number.replace(/^\+/, '')}`;
+
         const channelMessage =
-        `🚨 New Terminal Problem Report!\n\n` +
-        `👤 User: ${ctx.from.first_name || 'User'} (ID: ${ctx.from.id})\n` +
-        `🌐 Language: ${data.language.toUpperCase()}\n` +
-        `📟 Terminal Number: ${data.atm_number}\n` +
-        `🏢 ATM Name: ${data.atm_name}\n` +
-        `📞 Phone: +${data.phone_number.replace(/^\+/, '')}\n` +
-        `💳 Card: ${data.card_number}\n` +
-        `💰 Amount: ${data.amount} UZS\n` +
-        `🕒 Incident Time: ${data.incident_time}\n` +
-        `📝 Issue: ${data.problem_description}`;
+          `🚨 New Terminal Problem Report!\n\n` +
+          `👤 User: ${ctx.from.first_name || 'User'} (ID: ${ctx.from.id})\n` +
+          `🌐 Language: ${data.language.toUpperCase()}\n` +
+          `📟 Terminal Number: ${data.atm_number}\n` +
+          `🏢 ATM Name: ${data.atm_name || '-'}\n` +
+          `📝 Issue: ${data.problem_description}\n` +
+          `💰 Amount entered to terminal: ${data.amount} UZS\n` +
+          `💳 Card: ${data.card_number}\n` +
+          `📞 Phone: ${formattedPhone}`;
 
         await ctx.telegram.sendMessage(channelId, channelMessage);
       }
 
-      await ctx.reply(strings[lang].success);
+      await ctx.reply(strings[lang].success, Markup.removeKeyboard());
     } catch (error) {
       console.error('Save report error:', error);
+
       await ctx.reply(
-        'An error occurred. Please try again with /start.'
+        'An error occurred. Please try again with /start.',
+        Markup.removeKeyboard()
       );
     }
 
