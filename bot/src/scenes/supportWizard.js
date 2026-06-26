@@ -6,7 +6,6 @@ function getText(ctx) {
   if (!ctx.message || !ctx.message.text) {
     return null;
   }
-
   return ctx.message.text.trim();
 }
 
@@ -18,7 +17,6 @@ function getString(lang, key, fallback) {
   if (strings[lang] && strings[lang][key]) {
     return strings[lang][key];
   }
-
   return fallback;
 }
 
@@ -64,12 +62,7 @@ const supportWizard = new Scenes.WizardScene(
       );
     }
 
-    const langMap = {
-      lang_uz: 'uz',
-      lang_ru: 'ru',
-      lang_en: 'en'
-    };
-
+    const langMap = { lang_uz: 'uz', lang_ru: 'ru', lang_en: 'en' };
     const selectedLang = langMap[ctx.callbackQuery.data];
 
     if (!selectedLang) {
@@ -106,9 +99,7 @@ const supportWizard = new Scenes.WizardScene(
     }
 
     try {
-      const validAtm = await db('atms')
-        .where({ atm_number: typedAtm })
-        .first();
+      const validAtm = await db('atms').where({ atm_number: typedAtm }).first();
 
       if (!validAtm) {
         return ctx.reply(strings[lang].invalid_atm);
@@ -118,7 +109,6 @@ const supportWizard = new Scenes.WizardScene(
       ctx.wizard.state.formData.atm_name = validAtm.name;
 
       await ctx.reply(strings[lang].ask_problem);
-
       return ctx.wizard.next();
     } catch (err) {
       console.error('Terminal validation error:', err);
@@ -149,7 +139,6 @@ const supportWizard = new Scenes.WizardScene(
     ctx.wizard.state.formData.problem_description = problem;
 
     await ctx.reply(strings[lang].ask_amount);
-
     return ctx.wizard.next();
   },
 
@@ -182,11 +171,10 @@ const supportWizard = new Scenes.WizardScene(
     ctx.wizard.state.formData.amount = amount;
 
     await ctx.reply(strings[lang].ask_card);
-
     return ctx.wizard.next();
   },
 
-  // Step 6: Full card number
+  // Step 6: First 4 digits of card
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -200,18 +188,40 @@ const supportWizard = new Scenes.WizardScene(
       return ctx.scene.leave();
     }
 
-    const cardDigits = onlyDigits(getText(ctx));
+    const digits = onlyDigits(getText(ctx));
 
-    if (!/^\d{16}$/.test(cardDigits)) {
-      return ctx.reply(strings[lang].invalid_card);
+    if (!/^\d{4}$/.test(digits)) {
+      return ctx.reply(strings[lang].invalid_card_first4);
     }
 
-    const first4 = cardDigits.slice(0, 4);
-    const last4 = cardDigits.slice(-4);
+    ctx.wizard.state.formData.card_first4 = digits;
 
-    ctx.wizard.state.formData.card_first4 = first4;
-    ctx.wizard.state.formData.card_last4 = last4;
-    ctx.wizard.state.formData.card_number = `${first4}******${last4}`;
+    await ctx.reply(strings[lang].ask_card_last4);
+    return ctx.wizard.next();
+  },
+
+  // Step 7: Last 4 digits of card
+  async (ctx) => {
+    const lang = ctx.wizard.state.formData.language;
+
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
+    }
+
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
+    }
+
+    const digits = onlyDigits(getText(ctx));
+
+    if (!/^\d{4}$/.test(digits)) {
+      return ctx.reply(strings[lang].invalid_card_last4);
+    }
+
+    ctx.wizard.state.formData.card_last4 = digits;
+    ctx.wizard.state.formData.card_number = `${ctx.wizard.state.formData.card_first4}********${digits}`;
 
     const contactLabels = {
       uz: '📞 Telefon raqamni yuborish',
@@ -221,9 +231,7 @@ const supportWizard = new Scenes.WizardScene(
 
     await ctx.reply(
       strings[lang].ask_phone,
-      Markup.keyboard([
-        [Markup.button.contactRequest(contactLabels[lang])]
-      ])
+      Markup.keyboard([[Markup.button.contactRequest(contactLabels[lang])]])
         .resize()
         .oneTime()
     );
@@ -231,7 +239,7 @@ const supportWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Step 7: Phone number + save + notify channel
+  // Step 8: Phone number + save + notify channel
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -247,9 +255,9 @@ const supportWizard = new Scenes.WizardScene(
 
     let phoneNumber = null;
 
-    if (ctx.message && ctx.message.contact && ctx.message.contact.phone_number) {
+    if (ctx.message?.contact?.phone_number) {
       phoneNumber = ctx.message.contact.phone_number;
-    } else if (ctx.message && ctx.message.text) {
+    } else if (ctx.message?.text) {
       phoneNumber = ctx.message.text.trim();
     }
 
@@ -259,7 +267,6 @@ const supportWizard = new Scenes.WizardScene(
 
     phoneNumber = phoneNumber.replace(/\s/g, '');
 
-    // Basic validation: must look like a phone number (digits, optional leading +)
     if (!/^\+?\d{7,15}$/.test(phoneNumber)) {
       return ctx.reply(
         getString(
@@ -288,9 +295,6 @@ const supportWizard = new Scenes.WizardScene(
         amount: data.amount,
         problem_description: data.problem_description,
         created_at: new Date()
-
-        // If your DB requires incident_time, uncomment this:
-        // incident_time: null
       });
 
       const channelId = process.env.CHANNEL_TELEGRAM_ID;
@@ -315,7 +319,6 @@ const supportWizard = new Scenes.WizardScene(
       await ctx.reply(strings[lang].success, Markup.removeKeyboard());
     } catch (error) {
       console.error('Save report error:', error);
-
       await ctx.reply(
         'An error occurred. Please try again with /start.',
         Markup.removeKeyboard()
