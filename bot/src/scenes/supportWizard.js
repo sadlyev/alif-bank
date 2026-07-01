@@ -368,8 +368,8 @@ async (ctx) => {
           `🚨 Новое обращение по терминалу!\n\n` +
           `👤 Пользователь: ${ctx.from.first_name || 'Пользователь'} (ID: ${ctx.from.id})\n` +
           `🌐 Язык: ${data.language.toUpperCase()}\n` +
-          `📟 Номер терминала: ${data.terminal_number}\n` +
-          `🏢 Название терминала: ${data.terminal_name || '-'}\n` +
+          `📟 Номер терминала: ${data.atm_number}\n` +
+          `🏢 Название терминала: ${data.atm_name || '-'}\n` +
           `📝 Проблема: ${data.problem_description}\n` +
           `💰 Сумма, внесённая в терминал: ${data.amount} UZS\n` +
           `💳 Карта: ${data.card_number}\n` +
