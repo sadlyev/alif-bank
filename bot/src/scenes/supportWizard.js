@@ -108,41 +108,103 @@ const supportWizard = new Scenes.WizardScene(
       ctx.wizard.state.formData.atm_number = typedAtm;
       ctx.wizard.state.formData.atm_name = validAtm.name;
 
-      await ctx.reply(strings[lang].ask_problem);
-      return ctx.wizard.next();
+      await ctx.reply(
+      strings[lang].ask_problem,
+      Markup.inlineKeyboard([
+        [Markup.button.callback(strings[lang].problem_no_receipt, "problem_no_receipt")],
+        [Markup.button.callback(strings[lang].problem_no_money, "problem_no_money")],
+        [Markup.button.callback(strings[lang].problem_other, "problem_other")]
+      ])
+    );
+
+return ctx.wizard.next();
     } catch (err) {
       console.error('Terminal validation error:', err);
       return ctx.reply('Database error. Please try again.');
     }
   },
 
-  // Step 4: Problem description
-  async (ctx) => {
-    const lang = ctx.wizard.state.formData.language;
+// Step 4: Problem selection
+async (ctx) => {
+  const lang = ctx.wizard.state.formData.language;
 
-    if (isStartCommand(ctx)) {
-      await ctx.reply('Restarting...', Markup.removeKeyboard());
-      return ctx.scene.reenter();
-    }
+  if (isStartCommand(ctx)) {
+    await ctx.reply("Restarting...", Markup.removeKeyboard());
+    return ctx.scene.reenter();
+  }
 
-    if (isCancelCommand(ctx)) {
-      await ctx.reply('Cancelled.', Markup.removeKeyboard());
-      return ctx.scene.leave();
-    }
+  if (isCancelCommand(ctx)) {
+    await ctx.reply("Cancelled.", Markup.removeKeyboard());
+    return ctx.scene.leave();
+  }
 
-    const problem = getText(ctx);
+  if (!ctx.callbackQuery) {
+  return ctx.reply(
+    strings[lang].ask_problem,
+    Markup.inlineKeyboard([
+      [Markup.button.callback(strings[lang].problem_no_receipt, "problem_no_receipt")],
+      [Markup.button.callback(strings[lang].problem_no_money, "problem_no_money")],
+      [Markup.button.callback(strings[lang].problem_other, "problem_other")]
+    ])
+  );
+  }
 
-    if (!problem) {
-      return ctx.reply(strings[lang].ask_problem);
-    }
+  await ctx.answerCbQuery();
 
-    ctx.wizard.state.formData.problem_description = problem;
+  const problem = ctx.callbackQuery.data;
+
+  if (problem === "problem_no_receipt") {
+    ctx.wizard.state.formData.problem_description =
+      strings[lang].problem_no_receipt;
 
     await ctx.reply(strings[lang].ask_amount);
-    return ctx.wizard.next();
-  },
+    return ctx.wizard.selectStep(5);
+  }
 
-  // Step 5: Amount entered to terminal
+  if (problem === "problem_no_money") {
+    ctx.wizard.state.formData.problem_description =
+      strings[lang].problem_no_money;
+
+    await ctx.reply(strings[lang].ask_amount);
+    return ctx.wizard.selectStep(5);
+  }
+
+  if (problem === "problem_other") {
+    await ctx.reply(strings[lang].ask_problem_other);
+    return ctx.wizard.next();
+  }
+
+  return ctx.reply(strings[lang].ask_problem);
+},
+
+// Step 5: Custom problem description
+async (ctx) => {
+  const lang = ctx.wizard.state.formData.language;
+
+  if (isStartCommand(ctx)) {
+    await ctx.reply("Restarting...", Markup.removeKeyboard());
+    return ctx.scene.reenter();
+  }
+
+  if (isCancelCommand(ctx)) {
+    await ctx.reply("Cancelled.", Markup.removeKeyboard());
+    return ctx.scene.leave();
+  }
+
+  const problem = getText(ctx);
+
+  if (!problem) {
+    return ctx.reply(strings[lang].ask_problem_other);
+  }
+
+  ctx.wizard.state.formData.problem_description = problem;
+
+  await ctx.reply(strings[lang].ask_amount);
+
+  return ctx.wizard.next();
+},
+
+  // Step 6: Amount entered to terminal
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -174,7 +236,7 @@ const supportWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Step 6: First 4 digits of card
+  // Step 7: First 4 digits of card
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -200,7 +262,7 @@ const supportWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Step 7: Last 4 digits of card
+  // Step 8: Last 4 digits of card
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
@@ -239,7 +301,7 @@ const supportWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
 
-  // Step 8: Phone number + save + notify channel
+  // Step 9: Phone number + save + notify channel
   async (ctx) => {
     const lang = ctx.wizard.state.formData.language;
 
