@@ -1,8 +1,8 @@
 const strings = {
   uz: {
-    welcome: "Assalomu alaykum! Siz terminal qo'llab-quvvatlash botiga murojaat qildingiz. Davom etish uchun tilni tanlang:",
-    ask_terminal: "Iltimos, terminal raqamini kiriting:",
-    invalid_terminal: "❌ Ko'rsatilgan raqamli terminal topilmadi. Iltimos, raqamni tekshirib, qaytadan kiriting:",
+    welcome: "Xush kelibsiz! Bu terminal qo'llab-quvvatlash boti. / Добро пожаловать! Это бот поддержки терминала. / Welcome to the terminal support bot.",
+    ask_atm: "Iltimos, terminal raqamini kiriting:",
+    invalid_atm: "❌ Ko'rsatilgan raqamli terminal topilmadi. Iltimos, raqamni tekshirib, qaytadan kiriting:",
 
     ask_problem: "Iltimos, quyidagi muammolardan birini tanlang:",
     ask_problem_other: "Iltimos, muammoingizni batafsil yozib qoldiring:",
@@ -27,9 +27,9 @@ const strings = {
   },
 
   ru: {
-    welcome: "Здравствуйте! Вы обратились в службу поддержки Терминала. Пожалуйста, выберите язык для продолжения:",
-    ask_terminal: "Пожалуйста, укажите номер терминала:",
-    invalid_terminal: "❌ Терминал с указанным номером не найден. Пожалуйста, проверьте номер и введите его снова:",
+    welcome: "Xush kelibsiz! Bu terminal qo'llab-quvvatlash boti. / Добро пожаловать! Это бот поддержки терминала. / Welcome to the terminal support bot.",
+    ask_atm: "Пожалуйста, укажите номер терминала:",
+    invalid_atm: "❌ Терминал с указанным номером не найден. Пожалуйста, проверьте номер и введите его снова:",
 
     ask_problem: "Пожалуйста, выберите проблему из списка:",
     ask_problem_other: "Пожалуйста, опишите вашу проблему подробнее:",
@@ -54,9 +54,9 @@ const strings = {
   },
 
   en: {
-    welcome: "Welcome to the terminal support service. Please select a language to continue:",
-    ask_terminal: "Please enter the terminal number:",
-    invalid_terminal: "❌ No terminal was found with the specified number. Please verify the number and try again:",
+    welcome: "Xush kelibsiz! Bu terminal qo'llab-quvvatlash boti. / Добро пожаловать! Это бот поддержки терминала. / Welcome to the terminal support bot.",
+    ask_atm: "Please enter the terminal number:",
+    invalid_atm: "❌ No terminal was found with the specified number. Please verify the number and try again:",
 
     ask_problem: "Please select an issue from the list below:",
     ask_problem_other: "Please describe your issue in detail:",
