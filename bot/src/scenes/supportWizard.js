@@ -38,7 +38,7 @@ const supportWizard = new Scenes.WizardScene(
     ctx.wizard.state.formData = {};
 
     await ctx.reply(
-      "Xush kelibsiz! Bu Alif Bank qo'llab-quvvatlash boti. / Добро пожаловать! Это бот поддержки Алиф Банка. / Welcome to Alif Bank Support Bot.",
+"Xush kelibsiz! Bu terminal qo'llab-quvvatlash boti. / Добро пожаловать! Это бот поддержки терминала. / Welcome to the terminal support bot.",
       Markup.inlineKeyboard([
         [Markup.button.callback("O'zbekcha 🇺🇿", 'lang_uz')],
         [Markup.button.callback('Русский 🇷🇺', 'lang_ru')],
@@ -365,15 +365,15 @@ async (ctx) => {
         const formattedPhone = `+${data.phone_number.replace(/^\+/, '')}`;
 
         const channelMessage =
-          `🚨 New Terminal Problem Report!\n\n` +
-          `👤 User: ${ctx.from.first_name || 'User'} (ID: ${ctx.from.id})\n` +
-          `🌐 Language: ${data.language.toUpperCase()}\n` +
-          `📟 Terminal Number: ${data.atm_number}\n` +
-          `🏢 ATM Name: ${data.atm_name || '-'}\n` +
-          `📝 Issue: ${data.problem_description}\n` +
-          `💰 Amount entered to terminal: ${data.amount} UZS\n` +
-          `💳 Card: ${data.card_number}\n` +
-          `📞 Phone: ${formattedPhone}`;
+          `🚨 Новое обращение по терминалу!\n\n` +
+          `👤 Пользователь: ${ctx.from.first_name || 'Пользователь'} (ID: ${ctx.from.id})\n` +
+          `🌐 Язык: ${data.language.toUpperCase()}\n` +
+          `📟 Номер терминала: ${data.terminal_number}\n` +
+          `🏢 Название терминала: ${data.terminal_name || '-'}\n` +
+          `📝 Проблема: ${data.problem_description}\n` +
+          `💰 Сумма, внесённая в терминал: ${data.amount} UZS\n` +
+          `💳 Карта: ${data.card_number}\n` +
+          `📞 Телефон: ${formattedPhone}`;
 
         await ctx.telegram.sendMessage(channelId, channelMessage);
       }
