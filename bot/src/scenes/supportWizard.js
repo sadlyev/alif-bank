@@ -1,3 +1,4 @@
+
 const { Scenes, Markup } = require('telegraf');
 const db = require('../db');
 const strings = require('../languages');
@@ -30,6 +31,21 @@ function isStartCommand(ctx) {
   return text && text.toLowerCase() === '/start';
 }
 
+async function askPhone(ctx, lang) {
+  const contactLabels = {
+    uz: '📞 Telefon raqamni yuborish',
+    ru: '📞 Отправить номер телефона',
+    en: '📞 Share Phone Number'
+  };
+
+  return ctx.reply(
+    strings[lang].ask_phone,
+    Markup.keyboard([[Markup.button.contactRequest(contactLabels[lang])]])
+      .resize()
+      .oneTime()
+  );
+}
+
 const supportWizard = new Scenes.WizardScene(
   'support_wizard',
 
@@ -38,7 +54,7 @@ const supportWizard = new Scenes.WizardScene(
     ctx.wizard.state.formData = {};
 
     await ctx.reply(
-"Xush kelibsiz! Bu terminal qo'llab-quvvatlash boti. / Добро пожаловать! Это бот поддержки терминала. / Welcome to the terminal support bot.",
+      "Xush kelibsiz! Bu terminal qo'llab-quvvatlash boti. / Добро пожаловать! Это бот поддержки терминала. / Welcome to the terminal support bot.",
       Markup.inlineKeyboard([
         [Markup.button.callback("O'zbekcha 🇺🇿", 'lang_uz')],
         [Markup.button.callback('Русский 🇷🇺', 'lang_ru')],
@@ -109,100 +125,102 @@ const supportWizard = new Scenes.WizardScene(
       ctx.wizard.state.formData.atm_name = validAtm.name;
 
       await ctx.reply(
-      strings[lang].ask_problem,
-      Markup.inlineKeyboard([
-        [Markup.button.callback(strings[lang].problem_no_receipt, "problem_no_receipt")],
-        [Markup.button.callback(strings[lang].problem_no_money, "problem_no_money")],
-        [Markup.button.callback(strings[lang].problem_other, "problem_other")]
-      ])
-    );
+        strings[lang].ask_problem,
+        Markup.inlineKeyboard([
+          [Markup.button.callback(strings[lang].problem_no_receipt, 'problem_no_receipt')],
+          [Markup.button.callback(strings[lang].problem_no_money, 'problem_no_money')],
+          [Markup.button.callback(strings[lang].problem_other, 'problem_other')]
+        ])
+      );
 
-return ctx.wizard.next();
+      return ctx.wizard.next();
     } catch (err) {
       console.error('Terminal validation error:', err);
       return ctx.reply('Database error. Please try again.');
     }
   },
 
-// Step 4: Problem selection
-async (ctx) => {
-  const lang = ctx.wizard.state.formData.language;
+  // Step 4: Problem selection
+  async (ctx) => {
+    const lang = ctx.wizard.state.formData.language;
 
-  if (isStartCommand(ctx)) {
-    await ctx.reply("Restarting...", Markup.removeKeyboard());
-    return ctx.scene.reenter();
-  }
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
+    }
 
-  if (isCancelCommand(ctx)) {
-    await ctx.reply("Cancelled.", Markup.removeKeyboard());
-    return ctx.scene.leave();
-  }
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
+    }
 
-  if (!ctx.callbackQuery) {
-  return ctx.reply(
-    strings[lang].ask_problem,
-    Markup.inlineKeyboard([
-      [Markup.button.callback(strings[lang].problem_no_receipt, "problem_no_receipt")],
-      [Markup.button.callback(strings[lang].problem_no_money, "problem_no_money")],
-      [Markup.button.callback(strings[lang].problem_other, "problem_other")]
-    ])
-  );
-  }
+    if (!ctx.callbackQuery) {
+      return ctx.reply(
+        strings[lang].ask_problem,
+        Markup.inlineKeyboard([
+          [Markup.button.callback(strings[lang].problem_no_receipt, 'problem_no_receipt')],
+          [Markup.button.callback(strings[lang].problem_no_money, 'problem_no_money')],
+          [Markup.button.callback(strings[lang].problem_other, 'problem_other')]
+        ])
+      );
+    }
 
-  await ctx.answerCbQuery();
+    await ctx.answerCbQuery();
 
-  const problem = ctx.callbackQuery.data;
+    const problem = ctx.callbackQuery.data;
 
-  if (problem === "problem_no_receipt") {
-    ctx.wizard.state.formData.problem_description =
-      strings[lang].problem_no_receipt;
+    if (problem === 'problem_no_receipt') {
+      ctx.wizard.state.formData.problem_description = strings[lang].problem_no_receipt;
+      ctx.wizard.state.formData.skip_card_info = true;
+
+      await ctx.reply(strings[lang].ask_amount);
+      return ctx.wizard.selectStep(5);
+    }
+
+    if (problem === 'problem_no_money') {
+      ctx.wizard.state.formData.problem_description = strings[lang].problem_no_money;
+      ctx.wizard.state.formData.skip_card_info = false;
+
+      await ctx.reply(strings[lang].ask_amount);
+      return ctx.wizard.selectStep(5);
+    }
+
+    if (problem === 'problem_other') {
+      ctx.wizard.state.formData.skip_card_info = false;
+
+      await ctx.reply(strings[lang].ask_problem_other);
+      return ctx.wizard.next();
+    }
+
+    return ctx.reply(strings[lang].ask_problem);
+  },
+
+  // Step 5: Custom problem description
+  async (ctx) => {
+    const lang = ctx.wizard.state.formData.language;
+
+    if (isStartCommand(ctx)) {
+      await ctx.reply('Restarting...', Markup.removeKeyboard());
+      return ctx.scene.reenter();
+    }
+
+    if (isCancelCommand(ctx)) {
+      await ctx.reply('Cancelled.', Markup.removeKeyboard());
+      return ctx.scene.leave();
+    }
+
+    const problem = getText(ctx);
+
+    if (!problem) {
+      return ctx.reply(strings[lang].ask_problem_other);
+    }
+
+    ctx.wizard.state.formData.problem_description = problem;
 
     await ctx.reply(strings[lang].ask_amount);
-    return ctx.wizard.selectStep(5);
-  }
 
-  if (problem === "problem_no_money") {
-    ctx.wizard.state.formData.problem_description =
-      strings[lang].problem_no_money;
-
-    await ctx.reply(strings[lang].ask_amount);
-    return ctx.wizard.selectStep(5);
-  }
-
-  if (problem === "problem_other") {
-    await ctx.reply(strings[lang].ask_problem_other);
     return ctx.wizard.next();
-  }
-
-  return ctx.reply(strings[lang].ask_problem);
-},
-
-// Step 5: Custom problem description
-async (ctx) => {
-  const lang = ctx.wizard.state.formData.language;
-
-  if (isStartCommand(ctx)) {
-    await ctx.reply("Restarting...", Markup.removeKeyboard());
-    return ctx.scene.reenter();
-  }
-
-  if (isCancelCommand(ctx)) {
-    await ctx.reply("Cancelled.", Markup.removeKeyboard());
-    return ctx.scene.leave();
-  }
-
-  const problem = getText(ctx);
-
-  if (!problem) {
-    return ctx.reply(strings[lang].ask_problem_other);
-  }
-
-  ctx.wizard.state.formData.problem_description = problem;
-
-  await ctx.reply(strings[lang].ask_amount);
-
-  return ctx.wizard.next();
-},
+  },
 
   // Step 6: Amount entered to terminal
   async (ctx) => {
@@ -231,6 +249,15 @@ async (ctx) => {
     }
 
     ctx.wizard.state.formData.amount = amount;
+
+    if (ctx.wizard.state.formData.skip_card_info) {
+      ctx.wizard.state.formData.card_first4 = null;
+      ctx.wizard.state.formData.card_last4 = null;
+      ctx.wizard.state.formData.card_number = null;
+
+      await askPhone(ctx, lang);
+      return ctx.wizard.selectStep(8);
+    }
 
     await ctx.reply(strings[lang].ask_card);
     return ctx.wizard.next();
@@ -285,19 +312,7 @@ async (ctx) => {
     ctx.wizard.state.formData.card_last4 = digits;
     ctx.wizard.state.formData.card_number = `${ctx.wizard.state.formData.card_first4}********${digits}`;
 
-    const contactLabels = {
-      uz: '📞 Telefon raqamni yuborish',
-      ru: '📞 Отправить номер телефона',
-      en: '📞 Share Phone Number'
-    };
-
-    await ctx.reply(
-      strings[lang].ask_phone,
-      Markup.keyboard([[Markup.button.contactRequest(contactLabels[lang])]])
-        .resize()
-        .oneTime()
-    );
-
+    await askPhone(ctx, lang);
     return ctx.wizard.next();
   },
 
@@ -346,6 +361,7 @@ async (ctx) => {
     ctx.wizard.state.formData.phone_number = phoneNumber;
 
     const data = ctx.wizard.state.formData;
+    const submittedAt = new Date();
 
     try {
       await db('problem_reports').insert({
@@ -353,16 +369,25 @@ async (ctx) => {
         language: data.language,
         atm_number: data.atm_number,
         client_number: data.phone_number,
-        card_number: data.card_number,
+        card_number: data.card_number || null,
         amount: data.amount,
         problem_description: data.problem_description,
-        created_at: new Date()
+        created_at: submittedAt
       });
 
       const channelId = process.env.CHANNEL_TELEGRAM_ID;
 
       if (channelId) {
         const formattedPhone = `+${data.phone_number.replace(/^\+/, '')}`;
+        const submittedTime = submittedAt.toLocaleString('ru-RU', {
+          timeZone: 'Asia/Tashkent',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
 
         const channelMessage =
           `🚨 Новое обращение по терминалу!\n\n` +
@@ -372,8 +397,9 @@ async (ctx) => {
           `🏢 Название терминала: ${data.atm_name || '-'}\n` +
           `📝 Проблема: ${data.problem_description}\n` +
           `💰 Сумма, внесённая в терминал: ${data.amount} UZS\n` +
-          `💳 Карта: ${data.card_number}\n` +
-          `📞 Телефон: ${formattedPhone}`;
+          `💳 Карта: ${data.card_number || 'Не указана'}\n` +
+          `📞 Телефон: ${formattedPhone}\n` +
+          `🕒 Время отправки: ${submittedTime}`;
 
         await ctx.telegram.sendMessage(channelId, channelMessage);
       }
